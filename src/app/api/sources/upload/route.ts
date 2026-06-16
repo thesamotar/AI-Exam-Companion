@@ -22,7 +22,7 @@ Return ONLY a JSON object matching this blueprint schema:
     { "topic": "string", "frequency": "high|medium|low", "weightage_pct": 0 }
   ],
   "question_patterns": [
-    { "type": "single_mcq|multi_mcq|numerical_tita",
+    { "type": "single_mcq|multi_mcq|numerical_tita|subjective",
       "share_pct": 0, "difficulty": "easy|medium|hard",
       "example_phrasing": "string" }
   ],

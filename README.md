@@ -1,6 +1,6 @@
 # AI Exam Companion 🎓
 
-AI Exam Companion is a premium, AI-powered test preparation assistant that helps students practice for competitive entrance exams (like **JEE**, **NEET**, **CAT**, **SAT**, **GMAT**, or **GRE**) and custom PDF uploads. 
+AI Exam Companion is a premium, AI-powered test preparation assistant that helps students practice for competitive national exams (like **JEE**, **NEET**, or **CAT**) and custom PDF uploads. 
 
 The application uses **Google Gemini** to instantly generate high-fidelity practice questions with detailed solutions, dynamically targets your weak study areas, and provides an **AI Tutor Chatbot** for every question to guide you step-by-step.
 
@@ -8,12 +8,12 @@ The application uses **Google Gemini** to instantly generate high-fidelity pract
 
 ## ✨ Core Features
 
-1. **Standard Exam Presets (JEE, NEET, CAT, SAT, GMAT, GRE)**: Practice questions dynamically modeled after the structure, topics, and difficulties of actual entrance exams.
-2. **Custom PDF Paper Analyzer**: Upload past question papers or notes in PDF format. The system analyzes the document's structure to extract a customized study blueprint.
+1. **Standard National/International Presets (JEE, NEET, CAT, SAT, GMAT, GRE)**: Practice questions dynamically modeled after the structure, topics, difficulties, and formats (including MCQ, numeric, and subjective written formats) of actual entrance exams.
+2. **Custom PDF Paper Analyzer**: Upload past question papers or notes in PDF format. The system analyzes the document's structure to extract a customized study blueprint predicting MCQ, numerical, and subjective questions.
 3. **Adaptive Study Focus (40% Weak-Topic Bias)**: The app tracks your answers across attempts, highlights your weakest areas, and tilts new quizzes to contain ~40% questions from those topics.
-4. **Interactive Exam Interface**: A realistic test-taking workspace with built-in LaTeX/math formatting, a navigation side-bar, question bookmarks, and an auto-submit countdown timer.
-5. **Vertical Timeline Explanations**: Graded scorecards that display step-by-step solution explanations in a clean, visual timeline stepper layout.
-6. **Per-Question AI Tutoring**: A sliding sidebar chat drawer powered by Gemini. You can ask for hints, formula breakdowns, or conceptual explanations scoped specifically to that question.
+4. **Interactive Exam Interface**: A realistic test-taking workspace supporting textareas for written subjective answers, built-in LaTeX/math formatting, a navigation side-bar, question bookmarks, and an auto-submit countdown timer.
+5. **Vertical Timeline Explanations**: Graded scorecards displaying step-by-step solution explanations (or model sample answers and evaluation rubrics for subjective questions) in a clean, visual timeline stepper layout.
+6. **Per-Question AI Tutoring**: A sliding sidebar chat drawer powered by Gemini. You can ask for hints, formula breakdowns, or conceptual explanations scoped specifically to that question (including help reviewing subjective answers).
 7. **Developer Sandbox Mode**: Run the app immediately without any cloud database setup. All authentication and quiz history fallback to browser `localStorage` while retaining Gemini features.
 
 ---
@@ -23,9 +23,8 @@ The application uses **Google Gemini** to instantly generate high-fidelity pract
 ### 📊 The Dashboard
 When you open the app, you will see your **Dashboard**. 
 - **Stats Panel**: Displays your overall question accuracy, total exams attempted, and a list of your current **Weak Topics**.
-- **Action Panel**: The starting point for launching preset quizzes or custom paper analyses.
-- **Horizontal Study Sources Grid**: Displays your active study sources (presets or custom PDFs) in visual, horizontal cards.
-- **Recent Quiz Attempts List (Filterable)**: Displays your past attempt scores and dates with quick filters by exam source, duration, and performance tier.
+- **Action Panel**: The starting point for launched preset quizzes or custom paper analyses.
+- **Lists**: Shows your active study sources and past quiz history.
 
 ### 📝 Taking a Preset Quiz
 1. Click **Generate Preset Quiz** on the dashboard.
@@ -35,7 +34,7 @@ When you open the app, you will see your **Dashboard**.
    - **Medium Quiz**: 10 Questions (approx. 10 minutes)
    - **Hour Exam**: 30 Questions (approx. 60 minutes)
 4. Click **Start Exam Generation**. A holding progress bar will show the compilation state, and redirect you to the exam workspace.
-5. In the quiz window, click options to select answers. Use the sidebar to jump between questions or bookmark them for review. Click **Submit Quiz** when finished (or let the timer run down to auto-submit).
+5. In the quiz window, click options to select MCQ answers, or type your response in the textarea for subjective written questions. Use the sidebar to jump between questions or bookmark them for review. Click **Submit Quiz** when finished (or let the timer run down to auto-submit).
 
 ### 📁 Uploading Custom Papers
 1. Click **Analyze Custom Papers** on the dashboard.
@@ -44,8 +43,8 @@ When you open the app, you will see your **Dashboard**.
 4. Click **Start Paper Analysis**. The system will upload files and poll Gemini to extract topics and format a study blueprint. Once complete, you will be redirected to the dashboard, and your new custom source will appear in the **My Study Sources** list.
 
 ### 🔍 Reviewing Results & AI Tutoring
-1. After submitting a quiz, you will see your graded scorecard showing correct vs. incorrect answers.
-2. Click any question card to expand the **Solution Explanation**, rendered as a step-by-step timeline.
+1. After submitting a quiz, you will see your graded scorecard showing correct vs. incorrect answers. Subjective questions are completion-credited and labeled for self-grading.
+2. Click any question card to expand the **Solution Explanation** (or model sample answers and evaluation rubrics for subjective questions), rendered as a step-by-step timeline.
 3. If you still don't understand the solution, click **Ask AI Tutor**. A side-drawer will open. You can type questions like:
    - *"Give me a hint for Step 2"*
    - *"What formula was used to solve this?"*
@@ -129,7 +128,7 @@ This project requires a **Google Gemini API Key** to generate quizzes and run th
    ```
 2. Open `.env.local` in your text editor and fill in the values:
    ```env
-   # Your Supabase Project Settings -> API URL
+   # Your Supabase Project Settings -> API URL (You can also type in API URL in the search bar to get these)
    NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
    
    # Your Supabase Project Settings -> API anon public key

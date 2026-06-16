@@ -75,6 +75,8 @@ export async function POST(request: Request, { params }: ParamsProps) {
           ? rawQuestion.answer_key.correct_option
           : rawQuestion.type === 'multi_mcq'
           ? rawQuestion.answer_key.correct_options
+          : rawQuestion.type === 'subjective'
+          ? rawQuestion.answer_key.sample_answer
           : rawQuestion.answer_key.value,
         topic: attemptItem.topic,
         explanation: rawQuestion.explanation

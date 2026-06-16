@@ -67,7 +67,7 @@ export async function POST(request: Request, { params }: ParamsProps) {
       let isCorrect = false
 
       if (userVal === null || userVal === undefined || userVal === '' || (Array.isArray(userVal) && userVal.length === 0)) {
-        isCorrect = false
+        isCorrect = false;
       } else if (q.type === 'single_mcq') {
         isCorrect = userVal === q.answer_key.correct_option
       } else if (q.type === 'multi_mcq') {
@@ -81,6 +81,8 @@ export async function POST(request: Request, { params }: ParamsProps) {
         const targetFloat = q.answer_key.value
         const tol = q.answer_key.tolerance
         isCorrect = !isNaN(valFloat) && Math.abs(valFloat - targetFloat) <= tol
+      } else if (q.type === 'subjective') {
+        isCorrect = typeof userVal === 'string' && userVal.trim().length > 0
       }
 
       if (isCorrect) {

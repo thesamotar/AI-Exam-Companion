@@ -223,6 +223,8 @@ export default function QuizPage({ params }: QuizPageProps) {
         const targetVal = q.answer_key.value
         const tol = q.answer_key.tolerance
         isCorrect = !isNaN(userVal) && Math.abs(userVal - targetVal) <= tol
+      } else if (q.type === 'subjective') {
+        isCorrect = typeof answer === 'string' && answer.trim().length > 0
       }
 
       return {
@@ -479,6 +481,23 @@ export default function QuizPage({ params }: QuizPageProps) {
                         {currentQ.answer_key.unit}
                       </span>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {currentQ.type === 'subjective' && (
+                <div className="space-y-3 max-w-3xl">
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    Enter Subjective/Written Answer
+                  </label>
+                  <div className="relative rounded-xl border border-slate-800 bg-slate-950">
+                    <textarea
+                      value={userAnswers[currentQ.id] || ''}
+                      onChange={(e) => handleTitaChange(currentQ.id, e.target.value)}
+                      placeholder="Type your detailed written answer here..."
+                      rows={6}
+                      className="w-full px-4 py-3 bg-transparent rounded-xl text-white font-medium outline-none placeholder-slate-700 resize-y text-sm leading-relaxed"
+                    />
                   </div>
                 </div>
               )}

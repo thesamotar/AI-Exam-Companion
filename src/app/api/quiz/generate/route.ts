@@ -19,7 +19,7 @@ function validateQuestions(questions: any[]): boolean {
     if (ids.has(q.id)) return false
     ids.add(q.id)
 
-    if (!['single_mcq', 'multi_mcq', 'numerical_tita'].includes(q.type)) return false
+    if (!['single_mcq', 'multi_mcq', 'numerical_tita', 'subjective'].includes(q.type)) return false
 
     if (q.type === 'single_mcq' || q.type === 'multi_mcq') {
       if (!Array.isArray(q.options) || q.options.length !== 4) return false
@@ -36,6 +36,9 @@ function validateQuestions(questions: any[]): boolean {
       if (q.options !== null && q.options !== undefined) return false
       if (typeof q.answer_key?.value !== 'number') return false
       if (typeof q.answer_key?.tolerance !== 'number') return false
+    } else if (q.type === 'subjective') {
+      if (q.options !== null && q.options !== undefined) return false
+      if (!q.answer_key?.sample_answer || typeof q.answer_key.sample_answer !== 'string') return false
     }
   }
   return true
@@ -142,7 +145,7 @@ export async function POST(request: Request) {
       : `Generate standard syllabus questions for the entrance exam: ${sourceName}. Use standard topics associated with this exam (for JEE: Calculus, Mechanics, Organic Chemistry, etc. For NEET: Botany, Zoology, Human Physiology, Organic Chemistry, etc. For CAT: Quantitative Aptitude, Verbal Ability, Data Interpretation, etc. For SAT: Math (Algebra, Geometry, Data Analysis), Reading (Information and Ideas, Rhetoric), Writing (Standard English Conventions), etc. For GMAT/GRE: Quantitative Reasoning (Arithmetic, Algebra, Geometry, Data Sufficiency), Verbal Reasoning (Critical Reasoning, Reading Comprehension, Sentence Equivalence), etc.).`
 
     const prompt = `You are a professional test generation system.
-Generate exactly ${n} questions of multiple choice or numerical formats for the exam paper: ${sourceName}.
+Generate exactly ${n} questions of multiple choice, numerical, or subjective formats for the exam paper: ${sourceName}.
 
 ${blueprintPrompt}
 ${weakTopicInstruction}
@@ -151,6 +154,7 @@ For each question, select one of these types:
 1. "single_mcq": Multiple choice with exactly one correct option.
 2. "multi_mcq": Multiple choice with one or more correct options.
 3. "numerical_tita": Numeric answer entry (no options). Include "value", "tolerance" (allowed error margin e.g. 0.01 or 0.1), and "unit".
+4. "subjective": Written response question. For subjective questions, options should be null (no options). In "answer_key", supply a "sample_answer" field (model solution string) and a "rubric" field (describing key points evaluated).
 
 Ensure LaTeX formulas are enclosed in single dollar signs $...$ for inline equations and double dollar signs $$...$$ for block display equations.
 
@@ -206,6 +210,19 @@ Your output MUST be a JSON array of questions matching this schema format:
       "unit": "meters"
     },
     "explanation": "Step 1: Recall that distance traveled $s$ is the integral of speed $v(t)$ over the given time interval: $s = \\int_{t_1}^{t_2} v(t) dt$.\\n\\nStep 2: Set up the integral for the interval $t=0$ to $t=2$ with speed $v(t) = 3t^2$: $s = \\int_0^2 3t^2 dt$.\\n\\nStep 3: Find the antiderivative: $\\int 3t^2 dt = t^3$.\\n\\nStep 4: Evaluate the antiderivative at the limits: $[t^3]_0^2 = 2^3 - 0^3 = 8$ meters."
+  },
+  {
+    "id": "q4",
+    "type": "subjective",
+    "topic": "English Literature",
+    "difficulty": "medium",
+    "stem": "Explain the significance of the green light in F. Scott Fitzgerald's novel 'The Great Gatsby'.",
+    "options": null,
+    "answer_key": {
+      "sample_answer": "The green light at the end of Daisy's dock represents Gatsby's hopes and dreams for the future. It is a symbol of his love for Daisy and his yearning for the past, as well as the broader concept of the American Dream, which seems close but remains just out of reach.",
+      "rubric": "1. Mentions Gatsby's hope and dreams or love for Daisy (1 point).\\n2. Mentions representation of the American Dream or its unattainable nature (1 point)."
+    },
+    "explanation": "Step 1: Identify what the green light physically represents (Daisy's dock, Gatsby's proximity to her).\\n\\nStep 2: Connect the symbol to Gatsby's inner desire (reclaiming the past, his obsession with Daisy).\\n\\nStep 3: Generalize the symbol to the thematic level of the novel (the illusion of the American Dream, unreachable aspirations)."
   }
 ]`
 

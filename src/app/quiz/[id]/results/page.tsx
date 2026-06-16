@@ -302,6 +302,8 @@ export default function ResultsPage({ params }: ResultsPageProps) {
           ? matchedQ.answer_key.correct_option
           : matchedQ.type === 'multi_mcq'
           ? matchedQ.answer_key.correct_options
+          : matchedQ.type === 'subjective'
+          ? matchedQ.answer_key.sample_answer
           : matchedQ.answer_key.value,
         topic: activeItem.topic,
         explanation: matchedQ.explanation
@@ -489,6 +491,8 @@ export default function ResultsPage({ params }: ResultsPageProps) {
                 printedCorrectAns = q.answer_key.correct_option
               } else if (q.type === 'multi_mcq') {
                 printedCorrectAns = q.answer_key.correct_options.join(', ')
+              } else if (q.type === 'subjective') {
+                printedCorrectAns = q.answer_key.sample_answer
               } else {
                 printedCorrectAns = `${q.answer_key.value} (tolerance &plusmn; ${q.answer_key.tolerance})`
               }
@@ -499,15 +503,25 @@ export default function ResultsPage({ params }: ResultsPageProps) {
                 <div
                   key={q.id}
                   className={`p-6 rounded-2xl border bg-slate-900/20 backdrop-blur-sm space-y-4 transition-all ${
-                    isCorrect ? 'border-emerald-500/25' : 'border-rose-500/25'
+                    q.type === 'subjective'
+                      ? 'border-violet-500/25'
+                      : isCorrect
+                      ? 'border-emerald-500/25'
+                      : 'border-rose-500/25'
                   }`}
                 >
                   {/* Status header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className={`p-1 rounded-lg ${isCorrect ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                        {isCorrect ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                      </span>
+                      {q.type === 'subjective' ? (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center gap-1">
+                          <HelpCircle className="w-3.5 h-3.5" /> Self-Graded / Subjective
+                        </span>
+                      ) : (
+                        <span className={`p-1 rounded-lg ${isCorrect ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                          {isCorrect ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                        </span>
+                      )}
                       <span className="text-xs font-bold text-slate-400">Question {idx + 1}</span>
                     </div>
 
@@ -564,28 +578,57 @@ export default function ResultsPage({ params }: ResultsPageProps) {
                   )}
 
                   {/* Submission detail logs */}
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-900 text-xs text-slate-400">
-                    <div>
-                      <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Your Answer</p>
-                      <p className={`font-bold mt-0.5 ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {printedUserAns}
-                      </p>
+                  {q.type === 'subjective' ? (
+                    <div className="space-y-4 pt-2 border-t border-slate-900 text-xs text-slate-400">
+                      <div>
+                        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Your Written Answer</p>
+                        <p className="font-medium text-slate-200 mt-1.5 whitespace-pre-wrap bg-slate-950/40 p-4 border border-slate-900/60 rounded-xl leading-relaxed text-sm">
+                          {printedUserAns}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Model Sample Answer</p>
+                        <p className="font-medium text-slate-200 mt-1.5 whitespace-pre-wrap bg-slate-950/40 p-4 border border-slate-900/60 rounded-xl leading-relaxed text-sm">
+                          {q.answer_key.sample_answer}
+                        </p>
+                      </div>
+                      {q.answer_key.rubric && (
+                        <div>
+                          <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Evaluation Rubric / Key Criteria</p>
+                          <p className="font-medium text-slate-300 mt-1.5 whitespace-pre-wrap bg-slate-950/40 p-4 border border-slate-900/60 rounded-xl leading-relaxed text-sm">
+                            {q.answer_key.rubric}
+                          </p>
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Correct Answer</p>
-                      <p className="font-bold text-slate-200 mt-0.5">{printedCorrectAns}</p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-900 text-xs text-slate-400">
+                      <div>
+                        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Your Answer</p>
+                        <p className={`font-bold mt-0.5 ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {printedUserAns}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Correct Answer</p>
+                        <p className="font-bold text-slate-200 mt-0.5">{printedCorrectAns}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Explanation (LaTeX supported) */}
                   <div className={`p-5 rounded-r-xl rounded-l-md bg-slate-900/40 border border-slate-900 border-l-4 ${
-                    isCorrect ? 'border-l-emerald-500 bg-emerald-500/[0.02]' : 'border-l-violet-500 bg-violet-500/[0.02]'
+                    q.type === 'subjective'
+                      ? 'border-l-violet-500 bg-violet-500/[0.02]'
+                      : isCorrect
+                      ? 'border-l-emerald-500 bg-emerald-500/[0.02]'
+                      : 'border-l-rose-500 bg-rose-500/[0.02]'
                   } space-y-2`}>
                     <div className="flex items-center gap-2 text-slate-400">
-                      <Sparkles className={`w-3.5 h-3.5 ${isCorrect ? 'text-emerald-400' : 'text-violet-400'}`} />
+                      <Sparkles className={`w-3.5 h-3.5 ${q.type === 'subjective' ? 'text-violet-400' : isCorrect ? 'text-emerald-400' : 'text-rose-400'}`} />
                       <span className="text-[10px] font-bold uppercase tracking-wider">Solution Explanation</span>
                     </div>
-                    {renderExplanationSteps(q.explanation, isCorrect)}
+                    {renderExplanationSteps(q.explanation, isCorrect || q.type === 'subjective')}
                   </div>
                 </div>
               )
