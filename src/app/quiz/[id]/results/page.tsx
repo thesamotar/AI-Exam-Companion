@@ -100,6 +100,69 @@ function renderExplanationSteps(explanation: string, isCorrect: boolean) {
   )
 }
 
+function formatTutorMessage(content: string) {
+  if (!content) return null
+
+  const lines = content.split('\n')
+
+  return (
+    <div className="space-y-2">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim()
+        if (!trimmed) {
+          return <div key={idx} className="h-1.5" />
+        }
+
+        const isBullet = trimmed.startsWith('* ') || trimmed.startsWith('- ')
+        const isNumbered = /^\d+\.\s+/.test(trimmed)
+
+        if (isBullet) {
+          const cleanText = trimmed.replace(/^[\*\-]\s+/, '')
+          return (
+            <div key={idx} className="flex gap-2 pl-2 items-start">
+              <span className="text-violet-400 mt-1 shrink-0">•</span>
+              <span className="flex-1 text-slate-300">
+                <MathRenderer text={cleanText} />
+              </span>
+            </div>
+          )
+        }
+
+        if (isNumbered) {
+          const match = trimmed.match(/^(\d+)\.\s+([\s\S]*)/)
+          if (match) {
+            const num = match[1]
+            const cleanText = match[2]
+            return (
+              <div key={idx} className="flex gap-2 pl-2 items-start">
+                <span className="text-violet-400 font-bold shrink-0">{num}.</span>
+                <span className="flex-1 text-slate-300">
+                  <MathRenderer text={cleanText} />
+                </span>
+              </div>
+            )
+          }
+        }
+
+        const isHeader = trimmed.startsWith('###') || trimmed.startsWith('##')
+        if (isHeader) {
+          const cleanText = trimmed.replace(/^#+\s*/, '')
+          return (
+            <div key={idx} className="text-xs font-bold text-slate-100 mt-3 mb-1 uppercase tracking-wider">
+              <MathRenderer text={cleanText} />
+            </div>
+          )
+        }
+
+        return (
+          <p key={idx} className="leading-relaxed text-slate-300">
+            <MathRenderer text={trimmed} />
+          </p>
+        )
+      })}
+    </div>
+  )
+}
 
 interface ResultsPageProps {
   params: Promise<{ id: string }>
@@ -455,13 +518,13 @@ export default function ResultsPage({ params }: ResultsPageProps) {
                       {item && (
                         <button
                           onClick={() => setActiveItem(item)}
-                          className={`px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all ${
+                          className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md ${
                             isChatActive
-                              ? 'bg-violet-600 border-violet-500 text-white'
-                              : 'bg-slate-900 border-slate-800 hover:bg-slate-800 text-violet-400'
+                              ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-violet-600/30'
+                              : 'bg-gradient-to-r from-violet-500/20 to-indigo-500/20 border border-violet-500/30 hover:border-violet-500/50 text-violet-300 shadow-violet-950/40 hover:shadow-violet-600/10'
                           }`}
                         >
-                          <MessageSquare className="w-3.5 h-3.5" /> Tutor Companion
+                          <MessageSquare className="w-4 h-4 shrink-0 text-violet-400" /> Ask AI Tutor
                         </button>
                       )}
                     </div>
@@ -586,7 +649,7 @@ export default function ResultsPage({ params }: ResultsPageProps) {
                         : 'bg-slate-950 border border-slate-900 text-slate-200 rounded-tl-none'
                     }`}
                   >
-                    <MathRenderer text={msg.content} />
+                    {isUser ? <MathRenderer text={msg.content} /> : formatTutorMessage(msg.content)}
                   </div>
                 </div>
               )

@@ -61,6 +61,19 @@ export default function MathRenderer({ text }: MathRendererProps) {
                   )
                 }
               }
+              if (inlinePart.includes('**')) {
+                const boldParts = inlinePart.split(/(\*\*.*?\*\*)/g)
+                return (
+                  <React.Fragment key={j}>
+                    {boldParts.map((part, k) => {
+                      if (part.startsWith('**') && part.endsWith('**')) {
+                        return <strong key={k} className="font-bold text-slate-100">{part.slice(2, -2)}</strong>
+                      }
+                      return part
+                    })}
+                  </React.Fragment>
+                )
+              }
               return <React.Fragment key={j}>{inlinePart}</React.Fragment>
             })}
           </span>
