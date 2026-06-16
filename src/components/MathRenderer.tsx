@@ -1,0 +1,71 @@
+import React from 'react'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
+
+interface MathRendererProps {
+  text: string
+}
+
+export default function MathRenderer({ text }: MathRendererProps) {
+  if (!text) return null
+
+  // Split by block math first: $$ ... $$
+  const blockParts = text.split(/(\$\$[\s\S]*?\$\$)/g)
+
+  return (
+    <span>
+      {blockParts.map((blockPart, i) => {
+        if (blockPart.startsWith('$$') && blockPart.endsWith('$$')) {
+          const formula = blockPart.slice(2, -2)
+          try {
+            const html = katex.renderToString(formula, { displayMode: true, throwOnError: false })
+            return (
+              <span
+                key={i}
+                dangerouslySetInnerHTML={{ __html: html }}
+                className="block my-4 overflow-x-auto text-center"
+              />
+            )
+          } catch (err) {
+            console.error('KaTeX block error:', err)
+            return (
+              <span key={i} className="text-rose-400 block font-mono text-xs my-2">
+                {blockPart}
+              </span>
+            )
+          }
+        }
+
+        // Split by inline math: $ ... $
+        const inlineParts = blockPart.split(/(\$.*?\$)/g)
+        return (
+          <span key={i}>
+            {inlineParts.map((inlinePart, j) => {
+              if (inlinePart.startsWith('$') && inlinePart.endsWith('$')) {
+                const formula = inlinePart.slice(1, -1)
+                try {
+                  const html = katex.renderToString(formula, { displayMode: false, throwOnError: false })
+                  return (
+                    <span
+                      key={j}
+                      dangerouslySetInnerHTML={{ __html: html }}
+                      className="inline-block mx-0.5 align-middle"
+                    />
+                  )
+                } catch (err) {
+                  console.error('KaTeX inline error:', err)
+                  return (
+                    <span key={j} className="text-rose-400 font-mono text-xs">
+                      {inlinePart}
+                    </span>
+                  )
+                }
+              }
+              return <React.Fragment key={j}>{inlinePart}</React.Fragment>
+            })}
+          </span>
+        )
+      })}
+    </span>
+  )
+}
