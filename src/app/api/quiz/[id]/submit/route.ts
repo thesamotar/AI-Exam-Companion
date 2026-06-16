@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { gradeSubjectiveAnswer } from '@/utils/gemini'
 
 interface ParamsProps {
   params: Promise<{ id: string }>
@@ -65,9 +66,13 @@ export async function POST(request: Request, { params }: ParamsProps) {
       const submitted = answers.find((a: any) => a.question_id === q.id)
       const userVal = submitted ? submitted.value : null
       let isCorrect = false
+      let userAnsPayload: any = userVal
 
       if (userVal === null || userVal === undefined || userVal === '' || (Array.isArray(userVal) && userVal.length === 0)) {
         isCorrect = false;
+        if (q.type === 'subjective') {
+          userAnsPayload = { text: '', feedback: 'No answer was provided for this question.', score_pct: 0 }
+        }
       } else if (q.type === 'single_mcq') {
         isCorrect = userVal === q.answer_key.correct_option
       } else if (q.type === 'multi_mcq') {
@@ -82,7 +87,28 @@ export async function POST(request: Request, { params }: ParamsProps) {
         const tol = q.answer_key.tolerance
         isCorrect = !isNaN(valFloat) && Math.abs(valFloat - targetFloat) <= tol
       } else if (q.type === 'subjective') {
-        isCorrect = typeof userVal === 'string' && userVal.trim().length > 0
+        try {
+          const grading = await gradeSubjectiveAnswer(
+            q.stem,
+            q.answer_key.sample_answer,
+            q.answer_key.rubric,
+            userVal
+          )
+          isCorrect = grading.is_correct
+          userAnsPayload = {
+            text: userVal,
+            feedback: grading.feedback,
+            score_pct: grading.score_pct
+          }
+        } catch (err) {
+          console.error('Gemini subjective grading failed in submit endpoint:', err)
+          isCorrect = true // fallback to credit completion
+          userAnsPayload = {
+            text: userVal,
+            feedback: 'Grading failed due to an error, but completion was credited.',
+            score_pct: 100
+          }
+        }
       }
 
       if (isCorrect) {
@@ -92,7 +118,7 @@ export async function POST(request: Request, { params }: ParamsProps) {
       attemptItems.push({
         question_id: q.id,
         topic: q.topic,
-        user_answer: userVal !== undefined ? userVal : null,
+        user_answer: userAnsPayload,
         is_correct: isCorrect
       })
     }

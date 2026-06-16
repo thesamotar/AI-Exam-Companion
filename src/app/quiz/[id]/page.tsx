@@ -166,15 +166,83 @@ export default function QuizPage({ params }: QuizPageProps) {
       let attemptId = ''
 
       if (sandbox) {
-        // Local sandbox grading engine
-        const graded = gradeLocalQuiz(quiz.questions, userAnswers)
+        // We will call the AI grading API for subjective questions, and grade others deterministically
+        const items = await Promise.all(
+          quiz.questions.map(async (q) => {
+            const answer = userAnswers[q.id]
+            let isCorrect = false
+            let userAnsPayload: any = answer
+
+            if (answer === null || answer === undefined || answer === '' || (Array.isArray(answer) && answer.length === 0)) {
+              isCorrect = false
+              if (q.type === 'subjective') {
+                userAnsPayload = { text: '', feedback: 'No answer was provided for this question.', score_pct: 0 }
+              }
+            } else if (q.type === 'single_mcq') {
+              isCorrect = answer === q.answer_key.correct_option
+            } else if (q.type === 'multi_mcq') {
+              const userSet = new Set(answer)
+              const correctSet = new Set(q.answer_key.correct_options || [])
+              isCorrect =
+                userSet.size === correctSet.size &&
+                [...userSet].every((k) => correctSet.has(k))
+            } else if (q.type === 'numerical_tita') {
+              const userVal = parseFloat(answer)
+              const targetVal = q.answer_key.value
+              const tol = q.answer_key.tolerance
+              isCorrect = !isNaN(userVal) && Math.abs(userVal - targetVal) <= tol
+            } else if (q.type === 'subjective') {
+              try {
+                const res = await fetch('/api/quiz/grade-subjective', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    stem: q.stem,
+                    sample_answer: q.answer_key.sample_answer,
+                    rubric: q.answer_key.rubric,
+                    user_answer: answer
+                  })
+                })
+                if (res.ok) {
+                  const result = await res.json()
+                  isCorrect = result.is_correct
+                  userAnsPayload = {
+                    text: answer,
+                    feedback: result.feedback,
+                    score_pct: result.score_pct
+                  }
+                } else {
+                  throw new Error('API failed')
+                }
+              } catch (err) {
+                console.error('AI sandbox grading failed, fallback to completion:', err)
+                isCorrect = true
+                userAnsPayload = {
+                  text: answer,
+                  feedback: 'Grading failed due to an error, but completion was credited.',
+                  score_pct: 100
+                }
+              }
+            }
+
+            return {
+              question_id: q.id,
+              topic: q.topic,
+              user_answer: userAnsPayload,
+              is_correct: isCorrect
+            }
+          })
+        )
+
+        const score = items.filter((i) => i.is_correct).length / quiz.questions.length
+
         const saved = await saveAttempt(
           {
             quiz_id: quizId,
             source_id: quiz.source_id,
-            score: graded.score
+            score
           },
-          graded.items
+          items
         )
         attemptId = saved.id
       } else {

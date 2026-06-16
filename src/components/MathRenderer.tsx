@@ -6,6 +6,15 @@ interface MathRendererProps {
   text: string
 }
 
+function cleanFormula(formula: string): string {
+  return formula
+    .replace(/\r(?=[a-zA-Z])/g, '\\r')
+    .replace(/\n(?=[a-zA-Z])/g, '\\n')
+    .replace(/\t/g, '\\t')
+    .replace(/\f/g, '\\f')
+    .replace(/\b/g, '\\b')
+}
+
 export default function MathRenderer({ text }: MathRendererProps) {
   if (!text) return null
 
@@ -16,7 +25,7 @@ export default function MathRenderer({ text }: MathRendererProps) {
     <span>
       {blockParts.map((blockPart, i) => {
         if (blockPart.startsWith('$$') && blockPart.endsWith('$$')) {
-          const formula = blockPart.slice(2, -2)
+          const formula = cleanFormula(blockPart.slice(2, -2))
           try {
             const html = katex.renderToString(formula, { displayMode: true, throwOnError: false })
             return (
@@ -42,7 +51,7 @@ export default function MathRenderer({ text }: MathRendererProps) {
           <span key={i}>
             {inlineParts.map((inlinePart, j) => {
               if (inlinePart.startsWith('$') && inlinePart.endsWith('$')) {
-                const formula = inlinePart.slice(1, -1)
+                const formula = cleanFormula(inlinePart.slice(1, -1))
                 try {
                   const html = katex.renderToString(formula, { displayMode: false, throwOnError: false })
                   return (

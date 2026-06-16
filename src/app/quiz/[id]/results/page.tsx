@@ -482,8 +482,17 @@ export default function ResultsPage({ params }: ResultsPageProps) {
 
               // Format answer labels
               let printedUserAns = 'No Answer'
+              let aiFeedback = ''
+              let subjectiveScore: number | null = null
+
               if (userAnswer !== null && userAnswer !== undefined) {
-                printedUserAns = Array.isArray(userAnswer) ? userAnswer.join(', ') : String(userAnswer)
+                if (typeof userAnswer === 'object' && !Array.isArray(userAnswer)) {
+                  printedUserAns = userAnswer.text || ''
+                  aiFeedback = userAnswer.feedback || ''
+                  subjectiveScore = userAnswer.score_pct !== undefined ? userAnswer.score_pct : null
+                } else {
+                  printedUserAns = Array.isArray(userAnswer) ? userAnswer.join(', ') : String(userAnswer)
+                }
               }
 
               let printedCorrectAns = ''
@@ -503,9 +512,7 @@ export default function ResultsPage({ params }: ResultsPageProps) {
                 <div
                   key={q.id}
                   className={`p-6 rounded-2xl border bg-slate-900/20 backdrop-blur-sm space-y-4 transition-all ${
-                    q.type === 'subjective'
-                      ? 'border-violet-500/25'
-                      : isCorrect
+                    isCorrect
                       ? 'border-emerald-500/25'
                       : 'border-rose-500/25'
                   }`}
@@ -514,8 +521,13 @@ export default function ResultsPage({ params }: ResultsPageProps) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {q.type === 'subjective' ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center gap-1">
-                          <HelpCircle className="w-3.5 h-3.5" /> Self-Graded / Subjective
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase flex items-center gap-1 border ${
+                          isCorrect 
+                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                            : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                        }`}>
+                          {isCorrect ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                          AI Graded ({subjectiveScore !== null ? `${subjectiveScore}%` : 'Pending'})
                         </span>
                       ) : (
                         <span className={`p-1 rounded-lg ${isCorrect ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
@@ -582,22 +594,37 @@ export default function ResultsPage({ params }: ResultsPageProps) {
                     <div className="space-y-4 pt-2 border-t border-slate-900 text-xs text-slate-400">
                       <div>
                         <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Your Written Answer</p>
-                        <p className="font-medium text-slate-200 mt-1.5 whitespace-pre-wrap bg-slate-950/40 p-4 border border-slate-900/60 rounded-xl leading-relaxed text-sm">
-                          {printedUserAns}
-                        </p>
+                        <div className="font-medium text-slate-200 mt-1.5 whitespace-pre-wrap bg-slate-950/40 p-4 border border-slate-900/60 rounded-xl leading-relaxed text-sm">
+                          <MathRenderer text={printedUserAns} />
+                        </div>
                       </div>
+                      {subjectiveScore !== null && (
+                        <div className="p-4 rounded-xl border border-violet-500/20 bg-violet-500/5 space-y-2">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="font-bold text-violet-300 uppercase tracking-wider text-[10px]">AI Reviewer Feedback</span>
+                            <span className={`font-extrabold text-sm px-2 py-0.5 rounded border ${isCorrect ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+                              Score: {subjectiveScore}% ({isCorrect ? 'Passed' : 'Needs Work'})
+                            </span>
+                          </div>
+                          {aiFeedback && (
+                            <div className="text-slate-300 leading-relaxed text-sm whitespace-pre-wrap font-medium">
+                              <MathRenderer text={aiFeedback} />
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <div>
                         <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Model Sample Answer</p>
-                        <p className="font-medium text-slate-200 mt-1.5 whitespace-pre-wrap bg-slate-950/40 p-4 border border-slate-900/60 rounded-xl leading-relaxed text-sm">
-                          {q.answer_key.sample_answer}
-                        </p>
+                        <div className="font-medium text-slate-200 mt-1.5 whitespace-pre-wrap bg-slate-950/40 p-4 border border-slate-900/60 rounded-xl leading-relaxed text-sm">
+                          <MathRenderer text={q.answer_key.sample_answer} />
+                        </div>
                       </div>
                       {q.answer_key.rubric && (
                         <div>
                           <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Evaluation Rubric / Key Criteria</p>
-                          <p className="font-medium text-slate-300 mt-1.5 whitespace-pre-wrap bg-slate-950/40 p-4 border border-slate-900/60 rounded-xl leading-relaxed text-sm">
-                            {q.answer_key.rubric}
-                          </p>
+                          <div className="font-medium text-slate-300 mt-1.5 whitespace-pre-wrap bg-slate-950/40 p-4 border border-slate-900/60 rounded-xl leading-relaxed text-sm">
+                            <MathRenderer text={q.answer_key.rubric} />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -605,13 +632,15 @@ export default function ResultsPage({ params }: ResultsPageProps) {
                     <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-900 text-xs text-slate-400">
                       <div>
                         <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Your Answer</p>
-                        <p className={`font-bold mt-0.5 ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {printedUserAns}
-                        </p>
+                        <div className={`font-bold mt-0.5 ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          <MathRenderer text={printedUserAns} />
+                        </div>
                       </div>
                       <div>
                         <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Correct Answer</p>
-                        <p className="font-bold text-slate-200 mt-0.5">{printedCorrectAns}</p>
+                        <div className="font-bold text-slate-200 mt-0.5">
+                          <MathRenderer text={printedCorrectAns} />
+                        </div>
                       </div>
                     </div>
                   )}

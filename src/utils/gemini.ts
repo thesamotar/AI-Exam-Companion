@@ -119,3 +119,46 @@ export async function generateJSONWithRetry<T>(
   }
   throw new Error('Failed to generate valid JSON response.')
 }
+
+export interface SubjectiveGradeResult {
+  is_correct: boolean
+  score_pct: number
+  feedback: string
+}
+
+export async function gradeSubjectiveAnswer(
+  stem: string,
+  sampleAnswer: string,
+  rubric: string,
+  userAnswer: string
+): Promise<SubjectiveGradeResult> {
+  const prompt = `You are an expert exam reviewer.
+Evaluate the student's written answer to this question:
+Question: ${stem}
+Model Sample Answer: ${sampleAnswer}
+Grading Rubric: ${rubric || 'None provided. Evaluate overall correctness and completeness.'}
+
+Student's Answer: ${userAnswer}
+
+Determine:
+1. "score_pct": an integer score from 0 to 100 representing how well the student met the criteria.
+2. "is_correct": boolean (true if score_pct >= 50, otherwise false).
+3. "feedback": a concise (2-3 sentences) explanation of what was good and what could be improved based on the rubric.
+
+Return ONLY a JSON object matching this schema:
+{
+  "is_correct": boolean,
+  "score_pct": number,
+  "feedback": "string"
+}`
+
+  const model = process.env.GEMINI_GENERATION_MODEL || 'gemini-3.5-flash'
+  const schemaPrompt = 'JSON object with keys: is_correct (boolean), score_pct (number), feedback (string)'
+
+  return generateJSONWithRetry<SubjectiveGradeResult>(
+    prompt,
+    model,
+    schemaPrompt,
+    'You are an expert exam reviewer grading a subjective written answer.'
+  )
+}
