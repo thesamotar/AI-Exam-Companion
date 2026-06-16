@@ -1,6 +1,6 @@
 # AI Exam Companion 🎓
 
-AI Exam Companion is a premium, AI-powered test preparation assistant that helps students practice for competitive national exams (like **JEE**, **NEET**, or **CAT**) and custom PDF uploads. 
+AI Exam Companion is a premium, AI-powered test preparation assistant that helps students practice for competitive entrance exams (like **JEE**, **NEET**, **CAT**, **SAT**, **GMAT**, or **GRE**) and custom PDF uploads. 
 
 The application uses **Google Gemini** to instantly generate high-fidelity practice questions with detailed solutions, dynamically targets your weak study areas, and provides an **AI Tutor Chatbot** for every question to guide you step-by-step.
 
@@ -8,7 +8,7 @@ The application uses **Google Gemini** to instantly generate high-fidelity pract
 
 ## ✨ Core Features
 
-1. **Standard National Presets (JEE, NEET, CAT)**: Practice questions dynamically modeled after the structure, topics, and difficulties of actual entrance exams.
+1. **Standard Exam Presets (JEE, NEET, CAT, SAT, GMAT, GRE)**: Practice questions dynamically modeled after the structure, topics, and difficulties of actual entrance exams.
 2. **Custom PDF Paper Analyzer**: Upload past question papers or notes in PDF format. The system analyzes the document's structure to extract a customized study blueprint.
 3. **Adaptive Study Focus (40% Weak-Topic Bias)**: The app tracks your answers across attempts, highlights your weakest areas, and tilts new quizzes to contain ~40% questions from those topics.
 4. **Interactive Exam Interface**: A realistic test-taking workspace with built-in LaTeX/math formatting, a navigation side-bar, question bookmarks, and an auto-submit countdown timer.
@@ -23,12 +23,13 @@ The application uses **Google Gemini** to instantly generate high-fidelity pract
 ### 📊 The Dashboard
 When you open the app, you will see your **Dashboard**. 
 - **Stats Panel**: Displays your overall question accuracy, total exams attempted, and a list of your current **Weak Topics**.
-- **Action Panel**: The starting point for launched preset quizzes or custom paper analyses.
-- **Lists**: Shows your active study sources and past quiz history.
+- **Action Panel**: The starting point for launching preset quizzes or custom paper analyses.
+- **Horizontal Study Sources Grid**: Displays your active study sources (presets or custom PDFs) in visual, horizontal cards.
+- **Recent Quiz Attempts List (Filterable)**: Displays your past attempt scores and dates with quick filters by exam source, duration, and performance tier.
 
 ### 📝 Taking a Preset Quiz
 1. Click **Generate Preset Quiz** on the dashboard.
-2. Select an exam source (e.g. `JEE`, `NEET`, or `CAT`).
+2. Select an exam source (e.g. `JEE`, `NEET`, `CAT`, `SAT`, `GMAT`, or `GRE`).
 3. Choose a length:
    - **Short Quiz**: 5 Questions (approx. 5 minutes)
    - **Medium Quiz**: 10 Questions (approx. 10 minutes)

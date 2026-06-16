@@ -139,7 +139,7 @@ export async function POST(request: Request) {
 
     const blueprintPrompt = blueprint
       ? `The questions must adhere to this analysis blueprint extracted from the uploaded exams:\n${JSON.stringify(blueprint)}`
-      : `Generate standard syllabus questions for the entrance exam: ${sourceName}. Use standard topics associated with this exam (for JEE: Calculus, Mechanics, Organic Chemistry, etc. For NEET: Botany, Zoology, Human Physiology, Organic Chemistry, etc. For CAT: Quantitative Aptitude, Verbal Ability, Data Interpretation, etc.).`
+      : `Generate standard syllabus questions for the entrance exam: ${sourceName}. Use standard topics associated with this exam (for JEE: Calculus, Mechanics, Organic Chemistry, etc. For NEET: Botany, Zoology, Human Physiology, Organic Chemistry, etc. For CAT: Quantitative Aptitude, Verbal Ability, Data Interpretation, etc. For SAT: Math (Algebra, Geometry, Data Analysis), Reading (Information and Ideas, Rhetoric), Writing (Standard English Conventions), etc. For GMAT/GRE: Quantitative Reasoning (Arithmetic, Algebra, Geometry, Data Sufficiency), Verbal Reasoning (Critical Reasoning, Reading Comprehension, Sentence Equivalence), etc.).`
 
     const prompt = `You are a professional test generation system.
 Generate exactly ${n} questions of multiple choice or numerical formats for the exam paper: ${sourceName}.

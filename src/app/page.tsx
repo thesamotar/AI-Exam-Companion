@@ -16,7 +16,8 @@ import {
   HelpCircle,
   Clock,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  SlidersHorizontal
 } from 'lucide-react'
 import {
   getSources,
@@ -41,6 +42,11 @@ export default function DashboardPage() {
   const [sandbox, setSandbox] = useState(false)
   const [userEmail, setUserEmail] = useState<string>('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  // Filters State
+  const [selectedExamFilter, setSelectedExamFilter] = useState<string>('ALL')
+  const [selectedScoreFilter, setSelectedScoreFilter] = useState<string>('ALL')
+  const [selectedLengthFilter, setSelectedLengthFilter] = useState<string>('ALL')
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -70,16 +76,19 @@ export default function DashboardPage() {
         // Fetch sources
         let sourcesList = await getSources()
 
-        // Auto-provision default presets if empty (onboarding usability)
-        if (sourcesList.length === 0 && !isProvisioningDefaultPresets) {
+        // Auto-provision default presets if they are missing (onboarding usability)
+        const defaultNames = ['JEE', 'NEET', 'CAT', 'SAT', 'GMAT', 'GRE']
+        const missingNames = defaultNames.filter(name => !sourcesList.some(s => s.type === 'preset_exam' && s.exam_name === name))
+
+        if (missingNames.length > 0 && !isProvisioningDefaultPresets) {
           isProvisioningDefaultPresets = true
           try {
-            const defaults = [
-              { type: 'preset_exam' as const, exam_name: 'JEE', status: 'ready' as const },
-              { type: 'preset_exam' as const, exam_name: 'NEET', status: 'ready' as const },
-              { type: 'preset_exam' as const, exam_name: 'CAT', status: 'ready' as const }
-            ]
-            for (const item of defaults) {
+            const defaultsToSave = missingNames.map(name => ({
+              type: 'preset_exam' as const,
+              exam_name: name,
+              status: 'ready' as const
+            }))
+            for (const item of defaultsToSave) {
               await saveSource(item)
             }
             sourcesList = await getSources()
@@ -271,7 +280,7 @@ export default function DashboardPage() {
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Standard Preset Exams</h2>
               <p className="text-sm text-slate-400 leading-relaxed mb-6">
-                Start a quiz modeled after standard national entrance papers like <strong className="text-slate-300 font-semibold">JEE (Engineering)</strong>, <strong className="text-slate-300 font-semibold">NEET (Medical)</strong>, or <strong className="text-slate-300 font-semibold">CAT (Management)</strong>. Generates adaptive questions instantly from Gemini's internal blueprints.
+                Start a quiz modeled after standard entrance papers like <strong className="text-slate-300 font-semibold">JEE</strong>, <strong className="text-slate-300 font-semibold">NEET</strong>, <strong className="text-slate-300 font-semibold">CAT</strong>, <strong className="text-slate-300 font-semibold">SAT</strong>, <strong className="text-slate-300 font-semibold">GMAT</strong>, or <strong className="text-slate-300 font-semibold">GRE</strong>. Generates adaptive questions instantly from Gemini's internal blueprints.
               </p>
             </div>
             <Link
@@ -302,39 +311,46 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Sources and Attempt History section */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Content Sources List (Left side) */}
-          <div className="lg:col-span-1 space-y-4">
-            <h3 className="text-lg font-bold text-slate-300">My Study Sources</h3>
-            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+        {/* Sources section (Full Width, horizontal layout) */}
+        <section className="space-y-4">
+          <h3 className="text-lg font-bold text-slate-300">My Study Sources</h3>
+          {sources.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {sources.map((source) => {
                 const isPreset = source.type === 'preset_exam'
                 return (
                   <div
                     key={source.id}
-                    className="p-4 rounded-xl bg-slate-900/40 border border-slate-900 flex items-center justify-between"
+                    className="p-5 rounded-2xl bg-slate-900/30 border border-slate-900 hover:border-violet-500/15 backdrop-blur-md transition-all flex flex-col justify-between space-y-4"
                   >
                     <div>
-                      <h4 className="font-bold text-slate-200">{source.exam_name}</h4>
-                      <p className="text-xs text-slate-500 capitalize">
+                      <h4 className="font-extrabold text-lg text-slate-100">{source.exam_name}</h4>
+                      <p className="text-xs text-slate-400 mt-1 capitalize leading-relaxed">
                         {isPreset ? 'Standard Preset' : `Uploaded PDFs (${source.mode_flag || 'similar'} mode)`}
                       </p>
                     </div>
 
-                    <div>
-                      {source.status === 'analyzing' ? (
-                        <span className="flex items-center gap-1 text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 animate-pulse">
-                          <Loader2 className="w-3 h-3 animate-spin" /> Analyzing
-                        </span>
-                      ) : source.status === 'error' ? (
-                        <span className="text-xs text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
-                          Error
-                        </span>
-                      ) : (
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-900">
+                      <div>
+                        {source.status === 'analyzing' ? (
+                          <span className="flex items-center gap-1.5 text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 animate-pulse font-bold uppercase tracking-wider">
+                            <Loader2 className="w-3 h-3 animate-spin" /> Analyzing
+                          </span>
+                        ) : source.status === 'error' ? (
+                          <span className="text-[10px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 font-bold uppercase tracking-wider">
+                            Error
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-bold uppercase tracking-wider">
+                            Ready
+                          </span>
+                        )}
+                      </div>
+
+                      {source.status === 'ready' && (
                         <Link
-                          href={isPreset ? `/preset/new?source=${source.id}` : `/preset/new?source=${source.id}`}
-                          className="text-xs text-violet-400 hover:text-violet-300 font-semibold"
+                          href={`/preset/new?source=${source.id}`}
+                          className="text-xs text-violet-400 hover:text-violet-300 font-bold flex items-center gap-1 hover:translate-x-0.5 transition-transform"
                         >
                           Start Quiz &rarr;
                         </Link>
@@ -344,81 +360,164 @@ export default function DashboardPage() {
                 )
               })}
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 border border-dashed border-slate-800 rounded-2xl text-center bg-slate-900/10">
+              <HelpCircle className="w-8 h-8 text-slate-600 mb-3" />
+              <p className="text-slate-400 font-medium">No study sources yet</p>
+              <p className="text-xs text-slate-600 mt-1">Select standard preset exams above or upload your own question papers.</p>
+            </div>
+          )}
+        </section>
 
-          {/* Test History List (Right side) */}
-          <div className="lg:col-span-2 space-y-4">
+        {/* Attempts History Section (Full Width, below sources) */}
+        <section className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h3 className="text-lg font-bold text-slate-300">Recent Quiz Attempts</h3>
-            {attempts.length > 0 ? (
-              <div className="border border-slate-900 rounded-xl overflow-hidden bg-slate-900/20">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-900 bg-slate-900/60 text-slate-400 text-xs uppercase tracking-wider font-bold">
-                        <th className="px-6 py-3">Date</th>
-                        <th className="px-6 py-3">Exam Paper</th>
-                        <th className="px-6 py-3">Length</th>
-                        <th className="px-6 py-3 text-center">Score</th>
-                        <th className="px-6 py-3"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-900/80">
-                      {attempts.map((attempt) => {
-                        const scorePct = Math.round(Number(attempt.score) * 100)
-                        return (
-                          <tr key={attempt.id} className="hover:bg-slate-900/30 transition-colors">
-                            <td className="px-6 py-4 text-slate-400 whitespace-nowrap">
-                              {new Date(attempt.submitted_at).toLocaleDateString(undefined, {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </td>
-                            <td className="px-6 py-4 font-semibold text-slate-200">
-                              {attempt.content_source?.exam_name || 'Custom Exam'}
-                            </td>
-                            <td className="px-6 py-4 text-slate-400">
-                              <span className="inline-flex items-center gap-1 text-xs">
-                                <Clock className="w-3.5 h-3.5" /> {attempt.quiz?.length || 'SHORT'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <span
-                                className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                  scorePct >= 75
-                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                    : scorePct >= 50
-                                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                    : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                }`}
-                              >
-                                {scorePct}%
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <Link
-                                href={`/quiz/${attempt.id}/results`}
-                                className="text-xs text-violet-400 hover:text-violet-300 font-semibold"
-                              >
-                                Review &rarr;
-                              </Link>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+            
+            {/* Filter controls */}
+            {attempts.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2.5 text-xs">
+                <div className="flex items-center gap-1 text-slate-500 mr-1.5">
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <span className="font-semibold uppercase tracking-wider text-[10px]">Filter By:</span>
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center p-12 border border-dashed border-slate-800 rounded-2xl text-center bg-slate-900/10">
-                <HelpCircle className="w-8 h-8 text-slate-600 mb-3" />
-                <p className="text-slate-400 font-medium">No quiz attempts yet</p>
-                <p className="text-xs text-slate-600 mt-1">Select an exam mode above to generate your first quiz paper.</p>
+
+                {/* Exam filter */}
+                <select
+                  value={selectedExamFilter}
+                  onChange={(e) => setSelectedExamFilter(e.target.value)}
+                  className="px-3 py-2 bg-slate-900 border border-slate-800 text-slate-300 rounded-xl outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-semibold"
+                >
+                  <option value="ALL">All Exams</option>
+                  {Array.from(new Set(sources.map(s => s.exam_name))).map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+
+                {/* Length filter */}
+                <select
+                  value={selectedLengthFilter}
+                  onChange={(e) => setSelectedLengthFilter(e.target.value)}
+                  className="px-3 py-2 bg-slate-900 border border-slate-800 text-slate-300 rounded-xl outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-semibold"
+                >
+                  <option value="ALL">All Durations</option>
+                  <option value="SHORT">Short (5 Qs)</option>
+                  <option value="MEDIUM">Medium (10 Qs)</option>
+                  <option value="HOUR">Hour (30 Qs)</option>
+                </select>
+
+                {/* Score filter */}
+                <select
+                  value={selectedScoreFilter}
+                  onChange={(e) => setSelectedScoreFilter(e.target.value)}
+                  className="px-3 py-2 bg-slate-900 border border-slate-800 text-slate-300 rounded-xl outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all font-semibold"
+                >
+                  <option value="ALL">All Scores</option>
+                  <option value="HIGH">High (≥ 75%)</option>
+                  <option value="AVERAGE">Average (50% - 74%)</option>
+                  <option value="LOW">Low (&lt; 50%)</option>
+                </select>
               </div>
             )}
           </div>
+
+          {attempts.length > 0 ? (
+            (() => {
+              const filteredAttempts = attempts.filter(attempt => {
+                if (selectedExamFilter !== 'ALL') {
+                  const sourceName = attempt.content_source?.exam_name || 'Custom Exam'
+                  if (sourceName !== selectedExamFilter) return false
+                }
+                if (selectedLengthFilter !== 'ALL') {
+                  const len = attempt.quiz?.length || 'SHORT'
+                  if (len !== selectedLengthFilter) return false
+                }
+                if (selectedScoreFilter !== 'ALL') {
+                  const scorePct = Math.round(Number(attempt.score) * 100)
+                  if (selectedScoreFilter === 'HIGH' && scorePct < 75) return false
+                  if (selectedScoreFilter === 'AVERAGE' && (scorePct < 50 || scorePct >= 75)) return false
+                  if (selectedScoreFilter === 'LOW' && scorePct >= 50) return false
+                }
+                return true
+              })
+
+              return filteredAttempts.length > 0 ? (
+                <div className="border border-slate-900 rounded-xl overflow-hidden bg-slate-900/20">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-900 bg-slate-900/60 text-slate-400 text-xs uppercase tracking-wider font-bold">
+                          <th className="px-6 py-3">Date</th>
+                          <th className="px-6 py-3">Exam Paper</th>
+                          <th className="px-6 py-3">Length</th>
+                          <th className="px-6 py-3 text-center">Score</th>
+                          <th className="px-6 py-3"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-900/80">
+                        {filteredAttempts.map((attempt) => {
+                          const scorePct = Math.round(Number(attempt.score) * 100)
+                          return (
+                            <tr key={attempt.id} className="hover:bg-slate-900/30 transition-colors">
+                              <td className="px-6 py-4 text-slate-400 whitespace-nowrap">
+                                {new Date(attempt.submitted_at).toLocaleDateString(undefined, {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </td>
+                              <td className="px-6 py-4 font-semibold text-slate-200">
+                                {attempt.content_source?.exam_name || 'Custom Exam'}
+                              </td>
+                              <td className="px-6 py-4 text-slate-400">
+                                <span className="inline-flex items-center gap-1 text-xs">
+                                  <Clock className="w-3.5 h-3.5" /> {attempt.quiz?.length || 'SHORT'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                    scorePct >= 75
+                                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                      : scorePct >= 50
+                                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                      : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                  }`}
+                                >
+                                  {scorePct}%
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <Link
+                                  href={`/quiz/${attempt.id}/results`}
+                                  className="text-xs text-violet-400 hover:text-violet-300 font-semibold"
+                                >
+                                  Review &rarr;
+                                </Link>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-12 border border-dashed border-slate-800 rounded-2xl text-center bg-slate-900/10">
+                  <SlidersHorizontal className="w-8 h-8 text-slate-700 mb-3" />
+                  <p className="text-slate-400 font-medium">No results match your filters</p>
+                  <p className="text-xs text-slate-600 mt-1">Try resetting or changing the filters to show attempts.</p>
+                </div>
+              )
+            })()
+          ) : (
+            <div className="flex flex-col items-center justify-center p-12 border border-dashed border-slate-800 rounded-2xl text-center bg-slate-900/10">
+              <HelpCircle className="w-8 h-8 text-slate-600 mb-3" />
+              <p className="text-slate-400 font-medium">No quiz attempts yet</p>
+              <p className="text-xs text-slate-600 mt-1">Select an exam mode above to generate your first quiz paper.</p>
+            </div>
+          )}
         </section>
       </main>
     </div>
