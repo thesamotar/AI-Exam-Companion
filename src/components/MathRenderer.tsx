@@ -8,11 +8,11 @@ interface MathRendererProps {
 
 function cleanFormula(formula: string): string {
   return formula
-    .replace(/\r(?=[a-zA-Z])/g, '\\r')
-    .replace(/\n(?=[a-zA-Z])/g, '\\n')
-    .replace(/\t/g, '\\t')
-    .replace(/\f/g, '\\f')
-    .replace(/\b/g, '\\b')
+    .replace(/\x0d(?=[a-zA-Z])/g, '\\r')
+    .replace(/\x0a(?=[a-zA-Z])/g, '\\n')
+    .replace(/\x09/g, '\\t')
+    .replace(/\x0c/g, '\\f')
+    .replace(/\x08/g, '\\b')
 }
 
 export default function MathRenderer({ text }: MathRendererProps) {
