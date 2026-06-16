@@ -493,7 +493,7 @@ export default function ResultsPage({ params }: ResultsPageProps) {
                         return (
                           <div key={opt.key} className={`p-3 rounded-lg border flex items-center gap-2 ${borderStyle}`}>
                             <span className="font-bold text-[10px] text-slate-500 uppercase tracking-wider">{opt.key}.</span>
-                            <span className="truncate">{opt.text}</span>
+                            <span className="flex-1"><MathRenderer text={opt.text} /></span>
                           </div>
                         )
                       })}

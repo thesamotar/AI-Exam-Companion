@@ -417,7 +417,7 @@ export default function QuizPage({ params }: QuizPageProps) {
                         }`}>
                           {opt.key}
                         </span>
-                        <span>{opt.text}</span>
+                        <span><MathRenderer text={opt.text} /></span>
                       </button>
                     )
                   })}
@@ -447,7 +447,7 @@ export default function QuizPage({ params }: QuizPageProps) {
                           {isSelected && <CheckSquare className="w-4 h-4 text-white" />}
                           {!isSelected && opt.key}
                         </span>
-                        <span>{opt.text}</span>
+                        <span><MathRenderer text={opt.text} /></span>
                       </button>
                     )
                   })}
